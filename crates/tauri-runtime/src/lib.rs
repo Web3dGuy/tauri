@@ -602,6 +602,31 @@ pub trait WebviewDispatch<T: UserEvent>: Debug + Clone + Send + Sync + Sized + '
 
   /// Clear all browsing data for this webview.
   fn clear_all_browsing_data(&self) -> Result<()>;
+
+  /// Bring the webview to the front of the z-order.
+  ///
+  /// This moves the webview above all sibling webviews within the same window.
+  /// Useful for showing UI overlays above content webviews.
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS**: Implemented using NSView z-ordering.
+  /// - **Windows**: Not yet implemented (no-op).
+  /// - **Linux**: Not yet implemented (no-op).
+  /// - **Android/iOS**: Not supported (no-op).
+  fn bring_to_front(&self) -> Result<()>;
+
+  /// Send the webview to the back of the z-order.
+  ///
+  /// This moves the webview behind all sibling webviews within the same window.
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS**: Implemented using NSView z-ordering.
+  /// - **Windows**: Not yet implemented (no-op).
+  /// - **Linux**: Not yet implemented (no-op).
+  /// - **Android/iOS**: Not supported (no-op).
+  fn send_to_back(&self) -> Result<()>;
 }
 
 /// Window dispatcher. A thread-safe handle to the window APIs.

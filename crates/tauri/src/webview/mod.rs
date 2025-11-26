@@ -2091,6 +2091,43 @@ tauri::Builder::default()
       .map_err(Into::into)
   }
 
+  /// Bring this webview to the front of the z-order.
+  ///
+  /// This moves the webview above all sibling webviews within the same window.
+  /// Useful for showing UI overlays above content webviews.
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS**: Implemented using NSView z-ordering.
+  /// - **Windows**: Not yet implemented (no-op).
+  /// - **Linux**: Not yet implemented (no-op).
+  /// - **Android/iOS**: Not supported (no-op).
+  pub fn bring_to_front(&self) -> crate::Result<()> {
+    self
+      .webview
+      .dispatcher
+      .bring_to_front()
+      .map_err(Into::into)
+  }
+
+  /// Send this webview to the back of the z-order.
+  ///
+  /// This moves the webview behind all sibling webviews within the same window.
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS**: Implemented using NSView z-ordering.
+  /// - **Windows**: Not yet implemented (no-op).
+  /// - **Linux**: Not yet implemented (no-op).
+  /// - **Android/iOS**: Not supported (no-op).
+  pub fn send_to_back(&self) -> crate::Result<()> {
+    self
+      .webview
+      .dispatcher
+      .send_to_back()
+      .map_err(Into::into)
+  }
+
   /// Returns all cookies in the runtime's cookie store including HTTP-only and secure cookies.
   ///
   /// Note that cookies will only be returned for URLs with an http or https scheme.

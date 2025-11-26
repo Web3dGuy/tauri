@@ -2415,6 +2415,20 @@ impl<R: Runtime> WebviewWindow<R> {
     self.webview.clear_all_browsing_data()
   }
 
+  /// Bring this webview to the front of the z-order.
+  ///
+  /// See [`Webview::bring_to_front`] for more details.
+  pub fn bring_to_front(&self) -> crate::Result<()> {
+    self.webview.bring_to_front()
+  }
+
+  /// Send this webview to the back of the z-order.
+  ///
+  /// See [`Webview::send_to_back`] for more details.
+  pub fn send_to_back(&self) -> crate::Result<()> {
+    self.webview.send_to_back()
+  }
+
   /// Returns all cookies in the runtime's cookie store including HTTP-only and secure cookies.
   ///
   /// Note that cookies will only be returned for URLs with an http or https scheme.

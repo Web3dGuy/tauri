@@ -1429,6 +1429,9 @@ pub enum WebviewMessage {
   SetZoom(f64),
   SetBackgroundColor(Option<Color>),
   ClearAllBrowsingData,
+  // Z-order
+  BringToFront,
+  SendToBack,
   // Getters
   Url(Sender<Result<String>>),
   Bounds(Sender<Result<tauri_runtime::dpi::Rect>>),
@@ -1814,6 +1817,28 @@ impl<T: UserEvent> WebviewDispatch<T> for WryWebviewDispatcher<T> {
         *self.window_id.lock().unwrap(),
         self.webview_id,
         WebviewMessage::SetBackgroundColor(color),
+      ),
+    )
+  }
+
+  fn bring_to_front(&self) -> Result<()> {
+    send_user_message(
+      &self.context,
+      Message::Webview(
+        *self.window_id.lock().unwrap(),
+        self.webview_id,
+        WebviewMessage::BringToFront,
+      ),
+    )
+  }
+
+  fn send_to_back(&self) -> Result<()> {
+    send_user_message(
+      &self.context,
+      Message::Webview(
+        *self.window_id.lock().unwrap(),
+        self.webview_id,
+        WebviewMessage::SendToBack,
       ),
     )
   }
@@ -3714,6 +3739,16 @@ fn handle_user_message<T: UserEvent>(
           WebviewMessage::ClearAllBrowsingData => {
             if let Err(e) = webview.clear_all_browsing_data() {
               log::error!("failed to clear webview browsing data: {e}");
+            }
+          }
+          WebviewMessage::BringToFront => {
+            if let Err(e) = webview.bring_to_front() {
+              log::error!("failed to bring webview to front: {e}");
+            }
+          }
+          WebviewMessage::SendToBack => {
+            if let Err(e) = webview.send_to_back() {
+              log::error!("failed to send webview to back: {e}");
             }
           }
           // Getters
