@@ -2429,6 +2429,51 @@ impl<R: Runtime> WebviewWindow<R> {
     self.webview.send_to_back()
   }
 
+  /// Set the hit-test mode for this webview.
+  ///
+  /// See [`Webview::set_hit_test_mode`] for more details.
+  pub fn set_hit_test_mode(&self, mode: super::HitTestMode) -> crate::Result<()> {
+    self.webview.set_hit_test_mode(mode)
+  }
+
+  /// Get the current hit-test mode for this webview.
+  ///
+  /// See [`Webview::hit_test_mode`] for more details.
+  pub fn hit_test_mode(&self) -> super::HitTestMode {
+    self.webview.hit_test_mode()
+  }
+
+  /// Set the interactive regions for this webview.
+  ///
+  /// See [`Webview::set_hit_regions`] for more details.
+  pub fn set_hit_regions(&self, regions: Vec<tauri_runtime::dpi::Rect>) -> crate::Result<()> {
+    self.webview.set_hit_regions(regions)
+  }
+
+  /// Add an interactive region to this webview.
+  ///
+  /// See [`Webview::add_hit_region`] for more details.
+  pub fn add_hit_region(
+    &self,
+    bounds: tauri_runtime::dpi::Rect,
+  ) -> crate::Result<super::HitRegionId> {
+    self.webview.add_hit_region(bounds)
+  }
+
+  /// Remove an interactive region by its ID.
+  ///
+  /// See [`Webview::remove_hit_region`] for more details.
+  pub fn remove_hit_region(&self, id: super::HitRegionId) -> crate::Result<()> {
+    self.webview.remove_hit_region(id)
+  }
+
+  /// Remove all interactive regions from this webview.
+  ///
+  /// See [`Webview::clear_hit_regions`] for more details.
+  pub fn clear_hit_regions(&self) -> crate::Result<()> {
+    self.webview.clear_hit_regions()
+  }
+
   /// Returns all cookies in the runtime's cookie store including HTTP-only and secure cookies.
   ///
   /// Note that cookies will only be returned for URLs with an http or https scheme.

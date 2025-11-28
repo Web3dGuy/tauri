@@ -115,6 +115,28 @@ pub enum ResizeDirection {
   West,
 }
 
+/// Defines how a webview handles hit testing for mouse events.
+///
+/// This is useful for creating overlay UIs where certain regions should pass
+/// mouse events through to views beneath.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum HitTestMode {
+  /// Normal behavior - all mouse events are captured by this webview.
+  #[default]
+  Normal,
+
+  /// Only capture events in explicitly defined regions.
+  /// Events outside these regions pass through to views beneath.
+  RegionBased,
+
+  /// All events pass through - webview is completely non-interactive.
+  PassThrough,
+}
+
+/// A unique identifier for a hit-test region.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct HitRegionId(pub u64);
+
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum Error {
@@ -627,6 +649,68 @@ pub trait WebviewDispatch<T: UserEvent>: Debug + Clone + Send + Sync + Sized + '
   /// - **Linux**: Not yet implemented (no-op).
   /// - **Android/iOS**: Not supported (no-op).
   fn send_to_back(&self) -> Result<()>;
+
+  /// Sets the hit-test mode for this webview.
+  ///
+  /// This controls how the webview handles mouse events:
+  /// - [`HitTestMode::Normal`]: All events captured (default)
+  /// - [`HitTestMode::RegionBased`]: Only capture in defined regions, passthrough elsewhere
+  /// - [`HitTestMode::PassThrough`]: All events pass through
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS**: Full support via NSView hitTest: override
+  /// - **Windows**: Not yet implemented (no-op).
+  /// - **Linux**: Not yet implemented (no-op).
+  /// - **iOS**: Not yet implemented (no-op).
+  /// - **Android**: Not supported (no-op).
+  fn set_hit_test_mode(&self, mode: HitTestMode) -> Result<()>;
+
+  /// Gets the current hit-test mode for this webview.
+  fn hit_test_mode(&self) -> HitTestMode;
+
+  /// Sets the interactive regions for [`HitTestMode::RegionBased`] mode.
+  ///
+  /// Replaces any existing regions. Events in these regions are captured;
+  /// events outside pass through to views beneath.
+  ///
+  /// Coordinates are in logical pixels relative to the webview's origin.
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS**: Full support
+  /// - **Windows/Linux/iOS**: Not yet implemented (no-op).
+  /// - **Android**: Not supported (no-op).
+  fn set_hit_regions(&self, regions: Vec<Rect>) -> Result<()>;
+
+  /// Adds a single interactive region and returns its ID for later removal.
+  ///
+  /// Useful for dynamically adding regions (e.g., when a dropdown opens).
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS**: Full support
+  /// - **Windows/Linux/iOS**: Not yet implemented (returns dummy ID).
+  /// - **Android**: Not supported (returns dummy ID).
+  fn add_hit_region(&self, bounds: Rect) -> Result<HitRegionId>;
+
+  /// Removes a previously added region by ID.
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS**: Full support
+  /// - **Windows/Linux/iOS**: Not yet implemented (no-op).
+  /// - **Android**: Not supported (no-op).
+  fn remove_hit_region(&self, id: HitRegionId) -> Result<()>;
+
+  /// Clears all hit-test regions.
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS**: Full support
+  /// - **Windows/Linux/iOS**: Not yet implemented (no-op).
+  /// - **Android**: Not supported (no-op).
+  fn clear_hit_regions(&self) -> Result<()>;
 }
 
 /// Window dispatcher. A thread-safe handle to the window APIs.
