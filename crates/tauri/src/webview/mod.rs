@@ -1139,6 +1139,21 @@ fn main() {
     self
   }
 
+  /// Sets the initial opacity of the webview (0.0 = fully transparent, 1.0 = fully opaque).
+  ///
+  /// This is useful for preventing visual flash when creating webviews - create with
+  /// opacity 0, position the webview, then set opacity to 1.
+  ///
+  /// ## Platform-specific:
+  ///
+  /// - **macOS / iOS**: Uses NSView/UIView alphaValue.
+  /// - **Windows / Linux / Android**: Not implemented.
+  #[must_use]
+  pub fn with_opacity(mut self, opacity: f32) -> Self {
+    self.webview_attributes.opacity = Some(opacity.clamp(0.0, 1.0));
+    self
+  }
+
   /// Change the default background throttling behaviour.
   ///
   /// By default, browsers use a suspend policy that will throttle timers and even unload
@@ -2071,7 +2086,6 @@ tauri::Builder::default()
   ///
   /// ## Platform-specific:
   ///
-  /// - **macOS / iOS**: Not implemented.
   /// - **Windows**:
   ///   - On Windows 7, transparency is not supported and the alpha value will be ignored.
   ///   - On Windows higher than 7: translucent colors are not supported so any alpha value other than `0` will be replaced by `255`
@@ -2080,6 +2094,22 @@ tauri::Builder::default()
       .webview
       .dispatcher
       .set_background_color(color)
+      .map_err(Into::into)
+  }
+
+  /// Set the webview opacity.
+  ///
+  /// Value should be between 0.0 (fully transparent) and 1.0 (fully opaque).
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS / iOS**: Implemented using NSView/UIView's alphaValue.
+  /// - **Windows / Linux / Android**: Not implemented (no-op).
+  pub fn set_opacity(&self, opacity: f32) -> crate::Result<()> {
+    self
+      .webview
+      .dispatcher
+      .set_opacity(opacity)
       .map_err(Into::into)
   }
 

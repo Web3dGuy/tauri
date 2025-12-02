@@ -13,8 +13,8 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-# Local WRY fork with z-order support
-wry = { path = "../../../wry", default-features = false, features = [
+# WRY fork with z-order, hit-test, and opacity support
+wry = { git = "https://github.com/Web3dGuy/wry.git", branch = "dev", default-features = false, features = [
   "drag-drop",
   "protocol",
   "os-webview",

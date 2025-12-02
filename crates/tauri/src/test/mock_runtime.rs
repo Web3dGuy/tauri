@@ -669,6 +669,10 @@ impl<T: UserEvent> WebviewDispatch<T> for MockWebviewDispatcher {
   fn set_background_color(&self, color: Option<tauri_utils::config::Color>) -> Result<()> {
     Ok(())
   }
+
+  fn set_opacity(&self, _opacity: f32) -> Result<()> {
+    Ok(())
+  }
 }
 
 impl<T: UserEvent> WindowDispatch<T> for MockWindowDispatcher {

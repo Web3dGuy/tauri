@@ -1429,6 +1429,7 @@ pub enum WebviewMessage {
   SetAutoResize(bool),
   SetZoom(f64),
   SetBackgroundColor(Option<Color>),
+  SetOpacity(f32),
   ClearAllBrowsingData,
   // Z-order
   BringToFront,
@@ -1825,6 +1826,17 @@ impl<T: UserEvent> WebviewDispatch<T> for WryWebviewDispatcher<T> {
         *self.window_id.lock().unwrap(),
         self.webview_id,
         WebviewMessage::SetBackgroundColor(color),
+      ),
+    )
+  }
+
+  fn set_opacity(&self, opacity: f32) -> Result<()> {
+    send_user_message(
+      &self.context,
+      Message::Webview(
+        *self.window_id.lock().unwrap(),
+        self.webview_id,
+        WebviewMessage::SetOpacity(opacity),
       ),
     )
   }
@@ -3814,6 +3826,11 @@ fn handle_user_message<T: UserEvent>(
               log::error!("failed to set webview background color: {e}");
             }
           }
+          WebviewMessage::SetOpacity(opacity) => {
+            if let Err(e) = webview.set_opacity(opacity) {
+              log::error!("failed to set webview opacity: {e}");
+            }
+          }
           WebviewMessage::ClearAllBrowsingData => {
             if let Err(e) = webview.clear_all_browsing_data() {
               log::error!("failed to clear webview browsing data: {e}");
@@ -4792,6 +4809,10 @@ You may have it installed on another user account, but it is not available for t
 
   if let Some(color) = webview_attributes.background_color {
     webview_builder = webview_builder.with_background_color(color.into());
+  }
+
+  if let Some(opacity) = webview_attributes.opacity {
+    webview_builder = webview_builder.with_opacity(opacity);
   }
 
   if webview_attributes.drag_drop_handler_enabled {

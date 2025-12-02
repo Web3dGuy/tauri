@@ -622,6 +622,16 @@ pub trait WebviewDispatch<T: UserEvent>: Debug + Clone + Send + Sync + Sized + '
   /// Set the webview background.
   fn set_background_color(&self, color: Option<Color>) -> Result<()>;
 
+  /// Set the webview opacity.
+  ///
+  /// Value should be between 0.0 (fully transparent) and 1.0 (fully opaque).
+  ///
+  /// ## Platform-specific
+  ///
+  /// - **macOS / iOS**: Implemented using NSView/UIView's alphaValue.
+  /// - **Windows / Linux / Android**: Not implemented (no-op).
+  fn set_opacity(&self, opacity: f32) -> Result<()>;
+
   /// Clear all browsing data for this webview.
   fn clear_all_browsing_data(&self) -> Result<()>;
 
