@@ -21,7 +21,6 @@ use tauri_macros::default_runtime;
 pub use tauri_runtime::webview::{NewWindowFeatures, PageLoadEvent, ScrollBarStyle};
 // Remove this re-export in v3
 pub use tauri_runtime::Cookie;
-pub use tauri_runtime::{HitRegionId, HitTestMode};
 #[cfg(desktop)]
 use tauri_runtime::{
   dpi::{PhysicalPosition, PhysicalSize, Position, Size},
@@ -2159,85 +2158,6 @@ tauri::Builder::default()
       .map_err(Into::into)
   }
 
-  /// Set the hit-test mode for this webview.
-  ///
-  /// Hit-test modes control how mouse events interact with the webview:
-  /// - [`HitTestMode::Normal`]: All events are captured by this webview (default).
-  /// - [`HitTestMode::RegionBased`]: Only events in defined regions are captured; others pass through.
-  /// - [`HitTestMode::PassThrough`]: All events pass through to views below.
-  ///
-  /// ## Platform-specific
-  ///
-  /// - **macOS**: Implemented using `NSView.hitTest:` override.
-  /// - **Windows**: Not yet implemented (no-op).
-  /// - **Linux**: Not yet implemented (no-op).
-  /// - **Android/iOS**: Not supported (no-op).
-  pub fn set_hit_test_mode(&self, mode: HitTestMode) -> crate::Result<()> {
-    self
-      .webview
-      .dispatcher
-      .set_hit_test_mode(mode)
-      .map_err(Into::into)
-  }
-
-  /// Get the current hit-test mode for this webview.
-  ///
-  /// See [`Self::set_hit_test_mode`] for details on hit-test modes.
-  pub fn hit_test_mode(&self) -> HitTestMode {
-    self.webview.dispatcher.hit_test_mode()
-  }
-
-  /// Set the interactive regions for this webview.
-  ///
-  /// Regions define areas where the webview captures mouse events when in
-  /// [`HitTestMode::RegionBased`] mode. Clicks outside these regions pass through
-  /// to views below.
-  ///
-  /// Coordinates are in logical pixels, with origin at the top-left of the webview.
-  ///
-  /// ## Platform-specific
-  ///
-  /// - **macOS**: Implemented.
-  /// - **Windows/Linux/Android/iOS**: Not yet implemented (no-op).
-  pub fn set_hit_regions(&self, regions: Vec<tauri_runtime::dpi::Rect>) -> crate::Result<()> {
-    self
-      .webview
-      .dispatcher
-      .set_hit_regions(regions)
-      .map_err(Into::into)
-  }
-
-  /// Add an interactive region to this webview.
-  ///
-  /// Returns a [`HitRegionId`] that can be used to remove the region later.
-  ///
-  /// See [`Self::set_hit_regions`] for details on regions.
-  pub fn add_hit_region(&self, bounds: tauri_runtime::dpi::Rect) -> crate::Result<HitRegionId> {
-    self
-      .webview
-      .dispatcher
-      .add_hit_region(bounds)
-      .map_err(Into::into)
-  }
-
-  /// Remove an interactive region by its ID.
-  ///
-  /// See [`Self::add_hit_region`] for creating regions.
-  pub fn remove_hit_region(&self, id: HitRegionId) -> crate::Result<()> {
-    self
-      .webview
-      .dispatcher
-      .remove_hit_region(id)
-      .map_err(Into::into)
-  }
-
-  /// Remove all interactive regions from this webview.
-  ///
-  /// After calling this, if in [`HitTestMode::RegionBased`] mode, all events
-  /// will pass through to views below.
-  pub fn clear_hit_regions(&self) -> crate::Result<()> {
-    self.webview.dispatcher.clear_hit_regions().map_err(Into::into)
-  }
 
   /// Returns all cookies in the runtime's cookie store including HTTP-only and secure cookies.
   ///

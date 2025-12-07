@@ -28,8 +28,8 @@ use tauri_runtime::{
     CursorIcon, DetachedWindow, DetachedWindowWebview, DragDropEvent, PendingWindow, RawWindow,
     WebviewEvent, WindowBuilder, WindowBuilderBase, WindowEvent, WindowId, WindowSizeConstraints,
   },
-  Cookie, DeviceEventFilter, Error, EventLoopProxy, ExitRequestedEventAction, HitRegionId,
-  HitTestMode, Icon, ProgressBarState, ProgressBarStatus, Result, RunEvent, Runtime, RuntimeHandle,
+  Cookie, DeviceEventFilter, Error, EventLoopProxy, ExitRequestedEventAction, Icon,
+  ProgressBarState, ProgressBarStatus, Result, RunEvent, Runtime, RuntimeHandle,
   RuntimeInitArgs, UserAttentionType, UserEvent, WebviewDispatch, WebviewEventId, WindowDispatch,
   WindowEventId,
 };
@@ -1434,13 +1434,6 @@ pub enum WebviewMessage {
   // Z-order
   BringToFront,
   SendToBack,
-  // Hit-test
-  SetHitTestMode(HitTestMode),
-  HitTestMode(Sender<HitTestMode>),
-  SetHitRegions(Vec<tauri_runtime::dpi::Rect>),
-  AddHitRegion(tauri_runtime::dpi::Rect, Sender<HitRegionId>),
-  RemoveHitRegion(HitRegionId),
-  ClearHitRegions,
   // Getters
   Url(Sender<Result<String>>),
   Bounds(Sender<Result<tauri_runtime::dpi::Rect>>),
@@ -1863,75 +1856,6 @@ impl<T: UserEvent> WebviewDispatch<T> for WryWebviewDispatcher<T> {
     )
   }
 
-  fn set_hit_test_mode(&self, mode: HitTestMode) -> Result<()> {
-    send_user_message(
-      &self.context,
-      Message::Webview(
-        *self.window_id.lock().unwrap(),
-        self.webview_id,
-        WebviewMessage::SetHitTestMode(mode),
-      ),
-    )
-  }
-
-  fn hit_test_mode(&self) -> HitTestMode {
-    let (tx, rx) = channel();
-    let _ = send_user_message(
-      &self.context,
-      Message::Webview(
-        *self.window_id.lock().unwrap(),
-        self.webview_id,
-        WebviewMessage::HitTestMode(tx),
-      ),
-    );
-    rx.recv().unwrap_or_default()
-  }
-
-  fn set_hit_regions(&self, regions: Vec<tauri_runtime::dpi::Rect>) -> Result<()> {
-    send_user_message(
-      &self.context,
-      Message::Webview(
-        *self.window_id.lock().unwrap(),
-        self.webview_id,
-        WebviewMessage::SetHitRegions(regions),
-      ),
-    )
-  }
-
-  fn add_hit_region(&self, bounds: tauri_runtime::dpi::Rect) -> Result<HitRegionId> {
-    let (tx, rx) = channel();
-    send_user_message(
-      &self.context,
-      Message::Webview(
-        *self.window_id.lock().unwrap(),
-        self.webview_id,
-        WebviewMessage::AddHitRegion(bounds, tx),
-      ),
-    )?;
-    rx.recv().map_err(|_| Error::FailedToReceiveMessage)
-  }
-
-  fn remove_hit_region(&self, id: HitRegionId) -> Result<()> {
-    send_user_message(
-      &self.context,
-      Message::Webview(
-        *self.window_id.lock().unwrap(),
-        self.webview_id,
-        WebviewMessage::RemoveHitRegion(id),
-      ),
-    )
-  }
-
-  fn clear_hit_regions(&self) -> Result<()> {
-    send_user_message(
-      &self.context,
-      Message::Webview(
-        *self.window_id.lock().unwrap(),
-        self.webview_id,
-        WebviewMessage::ClearHitRegions,
-      ),
-    )
-  }
 }
 
 /// The Tauri [`WindowDispatch`] for [`Wry`].
@@ -3844,59 +3768,6 @@ fn handle_user_message<T: UserEvent>(
           WebviewMessage::SendToBack => {
             if let Err(e) = webview.send_to_back() {
               log::error!("failed to send webview to back: {e}");
-            }
-          }
-          // Hit-test
-          WebviewMessage::SetHitTestMode(mode) => {
-            let wry_mode = match mode {
-              HitTestMode::Normal => wry::HitTestMode::Normal,
-              HitTestMode::RegionBased => wry::HitTestMode::RegionBased,
-              HitTestMode::PassThrough => wry::HitTestMode::PassThrough,
-            };
-            if let Err(e) = webview.set_hit_test_mode(wry_mode) {
-              log::error!("failed to set hit test mode: {e}");
-            }
-          }
-          WebviewMessage::HitTestMode(tx) => {
-            let mode = match webview.hit_test_mode() {
-              wry::HitTestMode::Normal => HitTestMode::Normal,
-              wry::HitTestMode::RegionBased => HitTestMode::RegionBased,
-              wry::HitTestMode::PassThrough => HitTestMode::PassThrough,
-            };
-            tx.send(mode).unwrap();
-          }
-          WebviewMessage::SetHitRegions(regions) => {
-            let wry_regions: Vec<wry::Rect> = regions
-              .into_iter()
-              .map(|r| {
-                let wrapper: RectWrapper = r.into();
-                wrapper.0
-              })
-              .collect();
-            if let Err(e) = webview.set_hit_regions(wry_regions) {
-              log::error!("failed to set hit regions: {e}");
-            }
-          }
-          WebviewMessage::AddHitRegion(bounds, tx) => {
-            let wrapper: RectWrapper = bounds.into();
-            match webview.add_hit_region(wrapper.0) {
-              Ok(wry_id) => {
-                tx.send(HitRegionId(wry_id.0)).unwrap();
-              }
-              Err(e) => {
-                log::error!("failed to add hit region: {e}");
-                tx.send(HitRegionId(0)).unwrap();
-              }
-            }
-          }
-          WebviewMessage::RemoveHitRegion(id) => {
-            if let Err(e) = webview.remove_hit_region(wry::HitRegionId(id.0)) {
-              log::error!("failed to remove hit region: {e}");
-            }
-          }
-          WebviewMessage::ClearHitRegions => {
-            if let Err(e) = webview.clear_hit_regions() {
-              log::error!("failed to clear hit regions: {e}");
             }
           }
           // Getters
